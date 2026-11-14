@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+*.egg-info/
+dist/
+build/
+
+# Large data files (too large for git)
+candidate_pack/data/*.csv
+
+# PDF emails/notes
+Gmail*.pdf
+
+# Zip archives
+*.zip
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Compiled PDF (optional — keep report.pdf)
+# *.pdf

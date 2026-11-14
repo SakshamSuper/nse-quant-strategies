@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NSE Quant Strategies — Saksham Aggarwal</title>
+  <meta name="description" content="Systematic quant trading strategies for Indian equity markets. Nifty 50 Futures Trend + NSE Stock Cross-Sectional Momentum."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0f1e;
+      --surface: #111827;
+      --surface2: #1a2235;
+      --border: #1f2d47;
+      --accent: #3b82f6;
+      --accent2: #8b5cf6;
+      --green: #10b981;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,15,30,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px;
+    }
+    .nav-brand { font-weight: 700; font-size: 0.95rem; color: var(--accent); letter-spacing: 0.03em; }
+    .nav-links { display: flex; gap: 1.5rem; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-btn {
+      background: var(--accent); color: #fff; border: none; border-radius: 6px;
+      padding: 6px 14px; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+      text-decoration: none; transition: opacity .2s;
+    }
+    .nav-btn:hover { opacity: .85; }
+
+    /* HERO */
+    .hero {
+      max-width: 1100px; margin: 0 auto;
+      padding: 5rem 2rem 3rem;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3);
+      color: var(--accent); border-radius: 999px;
+      padding: 4px 14px; font-size: 0.78rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      font-weight: 800; line-height: 1.1;
+      background: linear-gradient(135deg, #e2e8f0 0%, #3b82f6 50%, #8b5cf6 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1rem;
+    }
+    .hero p {
+      font-size: 1.1rem; color: var(--muted); max-width: 620px; margin: 0 auto 2rem;
+    }
+    .hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; padding: 12px 28px; border-radius: 8px;
+      font-weight: 600; text-decoration: none; font-size: 0.95rem;
+      transition: opacity .2s; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary:hover { opacity: .85; }
+    .btn-secondary {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); padding: 12px 28px; border-radius: 8px;
+      font-weight: 600; text-decoration: none; font-size: 0.95rem;
+      transition: border-color .2s; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-secondary:hover { border-color: var(--accent); }
+
+    /* STATS STRIP */
+    .stats-strip {
+      max-width: 1100px; margin: 0 auto 4rem;
+      padding: 0 2rem;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px;
+      background: var(--border); border-radius: 12px; overflow: hidden;
+    }
+    .stat-cell {
+      background: var(--surface); padding: 1.4rem 1.5rem;
+      text-align: center;
+    }
+    .stat-cell .val {
+      font-size: 1.9rem; font-weight: 800; font-family: var(--mono);
+      background: linear-gradient(135deg, var(--green), var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-cell .val.amber { background: linear-gradient(135deg, var(--amber), #fb923c);
+      -webkit-background-clip: text; background-clip: text; }
+    .stat-cell .lbl { font-size: 0.75rem; color: var(--muted); margin-top: 2px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+    .stat-cell .sub { font-size: 0.72rem; color: var(--accent); margin-top: 1px; font-family: var(--mono); }
+
+    /* SECTION */
+    section { max-width: 1100px; margin: 0 auto 4rem; padding: 0 2rem; }
+    .section-label {
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .1em; color: var(--accent); margin-bottom: 0.5rem;
+    }
+    .section-title {
+      font-size: 1.9rem; font-weight: 800; margin-bottom: 1rem;
+    }
+    .section-desc { color: var(--muted); margin-bottom: 2rem; max-width: 640px; }
+
+    /* STRATEGY CARDS */
+    .strategy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 1.5rem; }
+    .strategy-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem; position: relative; overflow: hidden;
+      transition: border-color .2s;
+    }
+    .strategy-card:hover { border-color: var(--accent); }
+    .strategy-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    }
+    .strategy-card.t1::before { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+    .strategy-card.t2::before { background: linear-gradient(90deg, var(--green), var(--accent)); }
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; }
+    .card-icon { font-size: 2rem; }
+    .card-tag {
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 999px; letter-spacing: .06em;
+    }
+    .card-tag.t1 { background: rgba(59,130,246,0.15); color: var(--accent); }
+    .card-tag.t2 { background: rgba(16,185,129,0.15); color: var(--green); }
+    .card-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .card-sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.5rem; }
+    .metrics-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .metric-pill {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.6rem 1rem; flex: 1; min-width: 90px;
+    }
+    .metric-pill .m-val {
+      font-size: 1.3rem; font-weight: 800; font-family: var(--mono); color: var(--green);
+    }
+    .metric-pill .m-val.blue { color: var(--accent); }
+    .metric-pill .m-lbl { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .hurdle-row { display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem; }
+    .check { color: var(--green); font-weight: 700; font-size: 0.9rem; }
+    .hurdle-text { font-size: 0.82rem; color: var(--muted); }
+    .hurdle-val { font-family: var(--mono); font-size: 0.82rem; color: var(--text); font-weight: 600; }
+    .card-desc { font-size: 0.85rem; color: var(--muted); margin-top: 1.2rem; line-height: 1.6; }
+    .tags-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.2rem; }
+    .tag {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 999px; padding: 3px 10px;
+      font-size: 0.72rem; color: var(--muted); font-family: var(--mono);
+    }
+
+    /* RETURNS TABLE */
+    .returns-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .returns-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    }
+    .returns-card h3 { padding: 1rem 1.5rem; font-size: 0.95rem; border-bottom: 1px solid var(--border); }
+    .year-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.7rem 1.5rem; border-bottom: 1px solid rgba(31,45,71,0.5);
+    }
+    .year-label { font-size: 0.85rem; color: var(--muted); font-family: var(--mono); }
+    .year-bar-wrap { flex: 1; margin: 0 1rem; height: 8px; background: var(--surface2); border-radius: 999px; overflow: hidden; }
+    .year-bar { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--green), var(--accent)); }
+    .year-val { font-family: var(--mono); font-size: 0.85rem; font-weight: 700; color: var(--green); min-width: 60px; text-align: right; }
+
+    /* CODE BLOCK */
+    .code-block {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .code-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.8rem 1.2rem; border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+    .code-dots { display: flex; gap: 6px; }
+    .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .code-dot.r { background: #ff5f57; }
+    .code-dot.y { background: #febc2e; }
+    .code-dot.g { background: #28c840; }
+    .code-filename { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); }
+    .code-body { padding: 1.2rem; font-family: var(--mono); font-size: 0.82rem; line-height: 1.8; overflow-x: auto; }
+    .code-body .kw { color: #c084fc; }
+    .code-body .str { color: #86efac; }
+    .code-body .num { color: #fb923c; }
+    .code-body .cm { color: #64748b; }
+    .code-body .fn { color: #60a5fa; }
+
+    /* EXPERIMENTS */
+    .exp-grid { display: grid; gap: 1rem; }
+    .exp-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1.2rem 1.5rem;
+      display: grid; grid-template-columns: auto 1fr auto; gap: 1rem; align-items: center;
+    }
+    .exp-num { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); background: var(--surface2); border-radius: 6px; padding: 4px 8px; }
+    .exp-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 2px; }
+    .exp-reason { font-size: 0.78rem; color: var(--muted); }
+    .exp-sharpe { font-family: var(--mono); font-size: 1.1rem; font-weight: 700; color: var(--amber); text-align: right; }
+    .exp-sharpe span { display: block; font-size: 0.65rem; color: var(--muted); font-weight: 400; }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border); text-align: center;
+      padding: 2rem; color: var(--muted); font-size: 0.82rem;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* GLOW */
+    .glow-bg {
+      position: fixed; top: -20%; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 400px; pointer-events: none; z-index: 0;
+      background: radial-gradient(ellipse, rgba(59,130,246,0.08) 0%, transparent 70%);
+    }
+
+    @media (max-width: 700px) {
+      .strategy-grid { grid-template-columns: 1fr; }
+      .returns-grid { grid-template-columns: 1fr; }
+      .exp-card { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="glow-bg"></div>
+
+<nav>
+  <span class="nav-brand">📈 NSE Quant</span>
+  <div class="nav-links">
+    <a href="#strategies">Strategies</a>
+    <a href="#returns">Returns</a>
+    <a href="#code">Code</a>
+    <a href="#research">Research</a>
+  </div>
+  <a class="nav-btn" href="https://github.com/SakshamSuper/nse-quant-strategies" target="_blank">GitHub ↗</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">⚡ Systematic Quant Trading · Indian Equity Markets</div>
+  <h1>Two Strategies.<br/>One Rigorous Framework.</h1>
+  <p>Production-grade, fully systematic, look-ahead-free trading strategies for Nifty 50 Futures and NSE equities — both beating performance hurdles.</p>
+  <div class="hero-btns">
+    <a class="btn-primary" href="https://github.com/SakshamSuper/nse-quant-strategies" target="_blank">
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      View on GitHub
+    </a>
+    <a class="btn-secondary" href="candidate_pack/report.pdf" target="_blank">
+      📄 Research Report
+    </a>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-strip">
+  <div class="stat-cell">
+    <div class="val">1.131</div>
+    <div class="lbl">Task 1 Sharpe</div>
+    <div class="sub">Hurdle &gt; 1.000 ✓</div>
+  </div>
+  <div class="stat-cell">
+    <div class="val">-8.29%</div>
+    <div class="lbl">Task 1 Max DD</div>
+    <div class="sub">Hurdle &lt; -15% ✓</div>
+  </div>
+  <div class="stat-cell">
+    <div class="val">2.240</div>
+    <div class="lbl">Task 2 Sharpe</div>
+    <div class="sub">Hurdle &gt; 1.900 ✓</div>
+  </div>
+  <div class="stat-cell">
+    <div class="val">-17.99%</div>
+    <div class="lbl">Task 2 Max DD</div>
+    <div class="sub">Hurdle &lt; -25% ✓</div>
+  </div>
+  <div class="stat-cell">
+    <div class="val amber">50.43%</div>
+    <div class="lbl">Task 2 CAGR</div>
+    <div class="sub">vs Nifty +44.6%</div>
+  </div>
+  <div class="stat-cell">
+    <div class="val amber">20/20</div>
+    <div class="lbl">Checks Passed</div>
+    <div class="sub">Zero look-ahead bias</div>
+  </div>
+</div>
+
+<!-- STRATEGIES -->
+<section id="strategies">
+  <div class="section-label">Strategies</div>
+  <div class="section-title">Two Complementary Systems</div>
+  <p class="section-desc">Each strategy targets a distinct alpha source: intraday trend-following on index futures and cross-sectional momentum on NSE equities.</p>
+
+  <div class="strategy-grid">
+    <!-- Task 1 -->
+    <div class="strategy-card t1">
+      <div class="card-header">
+        <div class="card-icon">📊</div>
+        <span class="card-tag t1">Nifty Futures</span>
+      </div>
+      <div class="card-title">Donchian Breakout + Trend Filter</div>
+      <div class="card-sub">15-minute bars · Long-only · 2017–2022</div>
+
+      <div class="metrics-row">
+        <div class="metric-pill">
+          <div class="m-val">1.131</div>
+          <div class="m-lbl">Sharpe</div>
+        </div>
+        <div class="metric-pill">
+          <div class="m-val blue">17.49%</div>
+          <div class="m-lbl">CAGR</div>
+        </div>
+        <div class="metric-pill">
+          <div class="m-val">2.111</div>
+          <div class="m-lbl">Calmar</div>
+        </div>
+      </div>
+
+      <div class="hurdle-row"><span class="check">✓</span><span class="hurdle-text">Sharpe</span><span class="hurdle-val">1.131 &gt; 1.000</span></div>
+      <div class="hurdle-row"><span class="check">✓</span><span class="hurdle-text">Max Drawdown</span><span class="hurdle-val">-8.29% vs -15% limit</span></div>
+      <div class="hurdle-row"><span class="check">✓</span><span class="hurdle-text">Look-ahead</span><span class="hurdle-val">0 discrepancies / 100 cuts</span></div>
+
+      <p class="card-desc">Enters long when price breaks above the 75-bar (3-day) rolling high and is above the 250-bar EMA. Exits when price breaks below the 125-bar trailing low or EMA. Only 3 parameters.</p>
+      <div class="tags-row">
+        <span class="tag">enter_bars=75</span>
+        <span class="tag">exit_bars=125</span>
+        <span class="tag">trend_ema=250</span>
+        <span class="tag">long-only</span>
+        <span class="tag">124 trades</span>
+      </div>
+    </div>
+
+    <!-- Task 2 -->
+    <div class="strategy-card t2">
+      <div class="card-header">
+        <div class="card-icon">🚀</div>
+        <span class="card-tag t2">NSE Equities</span>
+      </div>
+      <div class="card-title">Volatility-Adjusted Momentum</div>
+      <div class="card-sub">Daily bars · Weekly rebalance · 2022–2024</div>
+
+      <div class="metrics-row">
+        <div class="metric-pill">
+          <div class="m-val">2.240</div>
+          <div class="m-lbl">Sharpe</div>
+        </div>
+        <div class="metric-pill">
+          <div class="m-val blue">50.43%</div>
+          <div class="m-lbl">CAGR</div>
+        </div>
+        <div class="metric-pill">
+          <div class="m-val">2.803</div>
+          <div class="m-lbl">Calmar</div>
+        </div>
+      </div>
+
+      <div class="hurdle-row"><span class="check">✓</span><span class="hurdle-text">Sharpe</span><span class="hurdle-val">2.240 &gt; 1.900</span></div>
+      <div class="hurdle-row"><span class="check">✓</span><span class="hurdle-text">Max Drawdown</span><span class="hurdle-val">-17.99% vs -25% limit</span></div>
+      <div class="hurdle-row"><span class="check">✓</span><span class="hurdle-text">Total Return</span><span class="hurdle-val">+158.37% (vs Nifty +44.6%)</span></div>
+
+      <p class="card-desc">Ranks liquid NSE stocks by 6-month return ÷ 21-day realized volatility. Holds top 10 at equal weight. Fully liquidates to cash when Nifty drops below its 50-day EMA.</p>
+      <div class="tags-row">
+        <span class="tag">lookback=126d</span>
+        <span class="tag">vol=21d</span>
+        <span class="tag">nifty_ema=50</span>
+        <span class="tag">top-10</span>
+        <span class="tag">weekly rebal</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RETURNS -->
+<section id="returns">
+  <div class="section-label">Historical Returns</div>
+  <div class="section-title">Year-wise Performance</div>
+  <div class="returns-grid">
+    <div class="returns-card">
+      <h3>📊 Strategy 1 — Nifty Futures</h3>
+      <div class="year-row">
+        <span class="year-label">2017</span>
+        <div class="year-bar-wrap"><div class="year-bar" style="width:37%"></div></div>
+        <span class="year-val">+11.28%</span>
+      </div>
+      <div class="year-row">
+        <span class="year-label">2018</span>
+        <div class="year-bar-wrap"><div class="year-bar" style="width:48%"></div></div>
+        <span class="year-val">+15.68%</span>
+      </div>
+      <div class="year-row">
+        <span class="year-label">2019</span>
+        <div class="year-bar-wrap"><div class="year-bar" style="width:31%"></div></div>
+        <span class="year-val">+10.11%</span>
+      </div>
+      <div class="year-row">
+        <span class="year-label">2020</span>
+        <div class="year-bar-wrap"><div class="year-bar" style="width:93%"></div></div>
+        <span class="year-val">+30.47%</span>
+      </div>
+      <div class="year-row">
+        <span class="year-label">2021</span>
+        <div class="year-bar-wrap"><div class="year-bar" style="width:40%"></div></div>
+        <span class="year-val">+12.90%</span>
+      </div>
+      <div class="year-row">
+        <span class="year-label">2022</span>
+        <div class="year-bar-wrap"><div class="year-bar" style="width:14%"></div></div>
+        <span class="year-val">+4.34%</span>
+      </div>
+    </div>
+    <div class="returns-card">
+      <h3>🚀 Strategy 2 — NSE Momentum</h3>
+      <div class="year-row">
+        <span class="year-label">2022</span>
+        <div class="year-bar-wrap"><div class="year-bar" style="width:11%"></div></div>
+        <span class="year-val">+9.16%</span>
+      </div>
+      <div class="year-row">
+        <span class="year-label">2023</span>
+        <div class="year-bar-wrap"><div class="year-bar" style="width:100%"></div></div>
+        <span class="year-val">+83.34%</span>
+      </div>
+      <div class="year-row">
+        <span class="year-label">2024 ½</span>
+        <div class="year-bar-wrap"><div class="year-bar" style="width:35%"></div></div>
+        <span class="year-val">+29.10%</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CODE -->
+<section id="code">
+  <div class="section-label">Implementation</div>
+  <div class="section-title">Clean, Modular Python</div>
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div>
+      <span class="code-filename">task1.py — Nifty Futures Strategy</span>
+      <span></span>
+    </div>
+    <div class="code-body"><pre><span class="cm"># Centralized config — 3 of 6 allowed parameters</span>
+<span class="kw">PARAMS</span> = {
+    <span class="str">"enter_bars"</span>: <span class="num">75</span>,   <span class="cm"># 3-day breakout high</span>
+    <span class="str">"exit_bars"</span> : <span class="num">125</span>,  <span class="cm"># 5-day trailing stop low</span>
+    <span class="str">"trend_ema"</span> : <span class="num">250</span>,  <span class="cm"># 10-day trend filter</span>
+}
+
+<span class="kw">def</span> <span class="fn">positions</span>(bars: pd.DataFrame, params: <span class="kw">dict</span>) -> pd.Series:
+    high_channel = bars[<span class="str">"high"</span>].rolling(enter_bars).max().shift(<span class="num">1</span>)
+    low_channel  = bars[<span class="str">"low"</span>].rolling(exit_bars).min().shift(<span class="num">1</span>)
+    trend_ema    = bars[<span class="str">"close"</span>].ewm(span=ema_span).mean()
+
+    <span class="cm"># Entry: breakout + trend confirmation</span>
+    <span class="kw">if</span> c[i] > hi[i] <span class="kw">and</span> c[i] > ema[i]:
+        curr_pos = <span class="num">1.0</span>  <span class="cm"># LONG</span>
+    <span class="cm"># Exit: trailing stop or trend breakdown</span>
+    <span class="kw">elif</span> c[i] < lo[i] <span class="kw">or</span> c[i] < ema[i]:
+        curr_pos = <span class="num">0.0</span>  <span class="cm"># FLAT</span></pre></div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div>
+      <span class="code-filename">task2.py — NSE Momentum Strategy</span>
+      <span></span>
+    </div>
+    <div class="code-body"><pre><span class="cm"># Volatility-adjusted momentum score (Sharpe-like)</span>
+raw_return  = (c.iloc[-<span class="num">1</span>] / c.iloc[start_idx]) - <span class="num">1.0</span>
+ann_vol     = daily_returns.std() * np.sqrt(<span class="num">252</span>)
+vol_adj_score = raw_return / ann_vol
+
+<span class="cm"># Market regime gate: Nifty 50 vs 50-day EMA</span>
+nifty_ema = nifty_close.ewm(span=<span class="num">50</span>).mean().iloc[-<span class="num">1</span>]
+<span class="kw">if</span> nifty_close.iloc[-<span class="num">1</span>] < nifty_ema:
+    <span class="kw">return</span> sell_all()  <span class="cm"># 100% cash in bear regime</span>
+
+<span class="cm"># Select top 10, equal weight 10% each</span>
+top_symbols = scores.sort_values(ascending=<span class="kw">False</span>).index[:<span class="num">10</span>]</pre></div>
+  </div>
+</section>
+
+<!-- RESEARCH -->
+<section id="research">
+  <div class="section-label">Research Process</div>
+  <div class="section-title">Failed Experiments</div>
+  <p class="section-desc">Four genuinely implemented and rigorously backtested hypotheses that were rejected with documented evidence.</p>
+  <div class="exp-grid">
+    <div class="exp-card">
+      <span class="exp-num">EXP-01</span>
+      <div>
+        <div class="exp-name">Fixed-step Dip-Buying / Mean Reversion</div>
+        <div class="exp-reason">Sharpe below 1.90 hurdle; harness doesn't support pyramiding into existing positions</div>
+      </div>
+      <div class="exp-sharpe">1.811<span>Best Sharpe</span></div>
+    </div>
+    <div class="exp-card">
+      <span class="exp-num">EXP-02</span>
+      <div>
+        <div class="exp-name">15-min EMA(50/200) + ADX Crossover</div>
+        <div class="exp-reason">243x annual turnover — round-trip transaction costs destroyed all alpha</div>
+      </div>
+      <div class="exp-sharpe">0.813<span>Best Sharpe</span></div>
+    </div>
+    <div class="exp-card">
+      <span class="exp-num">EXP-03</span>
+      <div>
+        <div class="exp-name">Naive Unadjusted 6-month Momentum</div>
+        <div class="exp-reason">High-beta concentration + no macro regime protection → Sharpe below 1.90</div>
+      </div>
+      <div class="exp-sharpe">1.638<span>Best Sharpe</span></div>
+    </div>
+    <div class="exp-card">
+      <span class="exp-num">EXP-04</span>
+      <div>
+        <div class="exp-name">Daily-resampled EMA + ADX (Look-ahead Bug)</div>
+        <div class="exp-reason">187 look-ahead discrepancies discovered on truncation audit — fully discarded</div>
+      </div>
+      <div class="exp-sharpe" style="color:var(--red)">2.157⚠<span>Biased — invalid</span></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Built by <strong>Saksham Aggarwal</strong> &nbsp;·&nbsp;
+  <a href="https://github.com/SakshamSuper/nse-quant-strategies" target="_blank">GitHub</a> &nbsp;·&nbsp;
+  <a href="https://www.linkedin.com/in/saksham-aggarwal-67b965256/" target="_blank">LinkedIn</a>
+  </p>
+  <p style="margin-top:6px;font-size:0.75rem;color:#475569">Indian Equity Markets · NSE · Nifty 50 · Systematic Trading</p>
+</footer>
+
+</body>
+</html>
